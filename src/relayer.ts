@@ -81,7 +81,7 @@ class RelayerService {
 
 	private async sendBatch() {
 		// BatchId and BatchNonce should be defined by the relayer ,not by the user
-		if (this.messages.length === 0 || this.batches.length === 0) {
+		if (this.messages.length === 0 && this.batches.length === 0) {
 			return;
 		}
 		const currentQueue = [...this.messages];
