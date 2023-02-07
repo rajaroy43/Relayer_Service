@@ -1,4 +1,4 @@
-import fs from "fs";
+import { parseEther } from "ethers/lib/utils";
 import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
@@ -7,21 +7,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;
     const { deployer } = await getNamedAccounts();
 
-    const tx = await deploy("Receiver", {
+    const tx = await deploy("MockErc20", {
         from: deployer,
-        args: [deployer, "Receiver", "1.0.0"],
+        args: ["Automata", "Ata", parseEther("100000000")],
         log: true,
     });
 
-    console.log(`The address of Recevier contract is  ${tx.address}`);
-
-    const data = {
-        ReceiverAddress: tx.address,
-    };
-    fs.writeFile("DeployedAddress.json", JSON.stringify(data), (err) => {
-        if (err) {
-            console.error(err);
-        }
-    });
+    console.log(`The address of ERC20 contract is  ${tx.address}`);
 };
 export default func;
