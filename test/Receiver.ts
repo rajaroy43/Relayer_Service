@@ -58,8 +58,6 @@ describe("Receiver Contract", () => {
                 { name: "to", type: "address" },
                 { name: "tokenContract", type: "address" },
                 { name: "amount", type: "uint256" },
-                { name: "batchId", type: "uint256" },
-                { name: "batchNonce", type: "uint256" },
                 { name: "expiry", type: "uint256" },
                 { name: "txGas", type: "uint256" },
             ],
@@ -71,8 +69,6 @@ describe("Receiver Contract", () => {
             to: to.address,
             tokenContract: tokenContractErc20.address,
             amount,
-            batchId,
-            batchNonce,
             expiry,
             txGas,
         };
@@ -288,8 +284,6 @@ describe("Receiver Contract", () => {
                 { name: "to", type: "address" },
                 { name: "tokenContract", type: "address" },
                 { name: "amount", type: "uint256" },
-                { name: "batchId", type: "uint256" },
-                { name: "batchNonce", type: "uint256" },
                 { name: "expiry", type: "uint256" },
                 { name: "txGas", type: "uint256" },
             ],
@@ -301,8 +295,6 @@ describe("Receiver Contract", () => {
             to: account2.address,
             tokenContract: tokenContractErc20.address,
             amount,
-            batchId,
-            batchNonce,
             expiry,
             txGas: higherTxGas,
         };
@@ -352,8 +344,6 @@ describe("Receiver Contract", () => {
             to: account2.address,
             tokenContract: tokenContractErc20.address,
             amount,
-            batchId,
-            batchNonce,
             expiry,
             txGas: lowerTxGas,
         };
@@ -399,8 +389,6 @@ describe("Receiver Contract", () => {
             to: account2.address,
             tokenContract: tokenContractErc20.address,
             amount,
-            batchId,
-            batchNonce,
             expiry: expiry_Past,
             txGas,
         };
