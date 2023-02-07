@@ -43,13 +43,13 @@ app.post("/submitMessage", async (req: any, res: any) => {
 });
 
 // we can get this by using process.env
-// const {provider,privateKey} = process.env
-
+// const {PROVIDER_URL,PRIVATE_KEY} = process.env
+//const provider = new ethers.providers.JsonRpcProvider(PROVIDER_URL);
 // Local Host provider
 const provider = new ethers.providers.JsonRpcProvider("http://127.0.0.1:8545/");
 // Local Metamask Private Key
-const privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+const PRIVATE_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
 app.listen(4000, () => {
-	relayerService = new RelayerService(provider, privateKey);
+	relayerService = new RelayerService(provider, PRIVATE_KEY);
 	console.log("Server started at http://localhost:4000");
 });
