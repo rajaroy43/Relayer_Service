@@ -4,7 +4,6 @@ import { MetaTx } from "./types";
 export const checkMetaTxDataNotNull = (metaTx: MetaTx) => {
     for (const property in metaTx) {
         // @ts-ignore
-        // @ts-ignore
         if (metaTx[property] === null || metaTx[property] === undefined) {
             return false;
         }
@@ -23,6 +22,8 @@ export const getEip712Data = (eipTxData: MetaTx) => {
                 { name: "to", type: "address" },
                 { name: "tokenContract", type: "address" },
                 { name: "amount", type: "uint256" },
+                { name: "batchId", type: "uint256" },
+                { name: "batchNonce", type: "uint256" },
                 { name: "expiry", type: "uint256" },
                 { name: "txGas", type: "uint256" },
             ],
@@ -45,6 +46,8 @@ export const getEip712Data = (eipTxData: MetaTx) => {
             to: eipTxData.to,
             tokenContract: eipTxData.tokenContract,
             amount: eipTxData.amount,
+            batchId:eipTxData.batchId,
+            batchNonce:eipTxData.batchNonce,
             expiry: eipTxData.expiry,
             txGas: eipTxData.txGas,
         },

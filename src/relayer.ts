@@ -14,7 +14,7 @@ class RelayerService {
 	private provider: any;
 	private messages: any[];
 	private intervalId: NodeJS.Timeout;
-	public offchainStorage: OffchainStorageService;
+	public offchainStorageService: OffchainStorageService;
 	public batches: MetaTx[][];
 
 	constructor(provider: any, privateKey: string) {
@@ -24,16 +24,19 @@ class RelayerService {
 		this.messages = [];
 		this.batches = [];
 		this.startBatchInterval();
-		this.offchainStorage = new OffchainStorageService();
+		this.offchainStorageService = new OffchainStorageService();
 	}
 
 	async submitMessage(message: MetaTx) {
+		console.log("submitting message ", message);
 		// Validate message
 		if (!(await this.isValidMessage(message))) {
 			throw new Error("Invalid message");
 		}
 		console.log("Message validated");
 
+		// Setting batchNonce for users
+		await this.offchainStorageService.set(`${message.batchId}-${message.from.toLowerCase()}-batchNonce`, message.batchNonce.toString());
 		// Add message to batch
 		this.messages.push({ ...message });
 	}
@@ -79,35 +82,49 @@ class RelayerService {
 		}, BATCH_INTERVAL * 1000);
 	}
 
+	public async getExpectedBatchData(newTxGas: number, from: string) {
+		const currentQueue = [...this.messages];
+		console.log("first currentQueue", currentQueue);
+		let gasLimit = 0;
+		let batchId: number, batchNonce: string | undefined;
+		batchId = (await this.contract.currentBatchId()).toNumber() + this.batches.length;
+
+		for (const message of currentQueue) {
+			if (gasLimit + message.txGas > MAX_GAS_LIMIT) {
+				batchId++;
+				gasLimit = 0;
+			}
+			gasLimit += message.txGas;
+		}
+		gasLimit += newTxGas;
+		if (gasLimit > MAX_GAS_LIMIT) {
+			batchId++;
+		}
+		batchNonce = await this.offchainStorageService.get(`${batchId}-${from.toLowerCase()}-batchNonce`);
+
+		if (batchNonce == undefined) {
+			batchNonce = "0";
+		}
+		return { batchId, batchNonce: parseInt(batchNonce) + 1 };
+	}
+
 	private async sendBatch() {
 		// BatchId and BatchNonce should be defined by the relayer ,not by the user
 		if (this.messages.length === 0 && this.batches.length === 0) {
 			return;
 		}
 		const currentQueue = [...this.messages];
+		console.log("currentQueue", currentQueue);
 		// Calculate gas limit for the batch
 		let gasLimit = 0;
 		let currentBatch: MetaTx[] = [];
 		let firstBatch: MetaTx[] = [];
-		let currentBatchIdIndex = 0;
-		const onchainIndex = (await this.contract.currentBatchId()).toNumber();
 		for (const message of currentQueue) {
 			if (gasLimit + message.txGas > MAX_GAS_LIMIT) {
 				this.batches.push(currentBatch);
 				currentBatch = [];
 				gasLimit = 0;
-				currentBatchIdIndex++;
 			}
-			const currentBatchId = currentBatchIdIndex + onchainIndex;
-			let batchNonce = await this.offchainStorage.get(`${currentBatchId}-${message.from}-batchNonce`);
-			if (!batchNonce) {
-				batchNonce = "1";
-			}
-			// pushing batchId and batchNonce
-
-			message.batchNonce = parseInt(batchNonce);
-			message.batchId = currentBatchId;
-			await this.offchainStorage.set(`${currentBatchId}-${message.from}-batchNonce`, (parseInt(batchNonce) + 1).toString());
 			currentBatch.push(message);
 			gasLimit += message.txGas;
 		}
@@ -115,6 +132,8 @@ class RelayerService {
 		if (currentBatch.length) {
 			this.batches.push(currentBatch);
 		}
+		// clear all the messages
+		this.messages = [];
 		console.log("before processing batches", this.batches);
 
 		firstBatch = this.batches.splice(0, 1)[0];

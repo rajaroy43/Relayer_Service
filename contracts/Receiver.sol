@@ -18,7 +18,7 @@ contract Receiver is Ownable, EIP712, ReentrancyGuard {
 
     bytes32 constant ERC20METATRANSACTION_TYPEHASH =
         keccak256(
-            "ERC20MetaTransaction(address from,address to,address tokenContract,uint256 amount,uint256 expiry,uint256 txGas)"
+            "ERC20MetaTransaction(address from,address to,address tokenContract,uint256 amount,uint256 batchId,uint256 batchNonce,uint256 expiry,uint256 txGas)"
         );
 
     event MetaTx(
@@ -75,11 +75,10 @@ contract Receiver is Ownable, EIP712, ReentrancyGuard {
      * @dev Verifies the signature based on typed structured data.
      * See https://eips.ethereum.org/EIPS/eip-712
      */
-    function verify(Call memory callData, CallParams memory callParams)
-        public
-        view
-        returns (bool)
-    {
+    function verify(
+        Call memory callData,
+        CallParams memory callParams
+    ) public view returns (bool) {
         address signer = _hashTypedDataV4(
             keccak256(
                 abi.encode(
@@ -88,6 +87,8 @@ contract Receiver is Ownable, EIP712, ReentrancyGuard {
                     callData.to,
                     callParams.tokenContract,
                     callParams.amount,
+                    callParams.batchId,
+                    callParams.batchNonce,
                     callParams.expiry,
                     callParams.txGas
                 )
@@ -122,11 +123,10 @@ contract Receiver is Ownable, EIP712, ReentrancyGuard {
         );
     }
 
-    function meta_nonce(address from, uint256 batchId)
-        external
-        view
-        returns (uint256)
-    {
+    function meta_nonce(
+        address from,
+        uint256 batchId
+    ) external view returns (uint256) {
         return batches[from][batchId];
     }
 
@@ -138,9 +138,10 @@ contract Receiver is Ownable, EIP712, ReentrancyGuard {
         relayer = _newRelayer;
     }
 
-    function batch(Call[] memory callData, CallParams[] memory callParams)
-        external
-    {
+    function batch(
+        Call[] memory callData,
+        CallParams[] memory callParams
+    ) external {
         require(
             msg.sender == relayer,
             "can only be executed by the meta tx processor"

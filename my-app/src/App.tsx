@@ -68,15 +68,28 @@ const App = () => {
 			// Get the address of the user's MetaMask account
 			const signer = provider.getSigner();
 			const signerAddress = await signer.getAddress();
+			// spender/signer must be relayer here
+			// const txGas = await erc20.connect(signer)
+			//   .estimateGas.transferFrom(
+			//     relayerAddress,
+			//     eipTxData1.to,
+			//     amount
+			// );
+			const txGas = 45000; //From above line
 
 			const responseBatchData = await fetch("http://localhost:4000/batchdata", {
-				method: "GET",
+				method: "POST",
 				headers: {
 					accept: "application/json",
+					"Content-Type": "application/json",
 				},
+				body: JSON.stringify({
+					from: signerAddress,
+					txGas: txGas,
+				}),
 			});
-			const { relayerAddress } = await responseBatchData.json();
-			console.log(relayerAddress);
+			const { relayerAddress, batchId, batchNonce } = await responseBatchData.json();
+			console.log(relayerAddress, batchId, batchNonce);
 			console.log(eipTxData1);
 			const amount = parseEther(eipTxData1.amount); //Here probabaly will use amount*10**decimalsOfContract
 			// @ts-ignore
@@ -89,19 +102,12 @@ const App = () => {
 				await erc20.connect(signer).approve(relayerAddress, ethers.constants.MaxUint256);
 			}
 
-			// spender/signer must be relayer here
-			// const txGas = await erc20.connect(signer)
-			//   .estimateGas.transferFrom(
-			//     relayerAddress,
-			//     eipTxData1.to,
-			//     amount
-			// );
-			const txGas = 45000; //From above line
-
 			const eipTxData = {
 				...eipTxData1,
 				relayerAddress,
 				amount: amount.toString(),
+				batchId,
+				batchNonce,
 				expiry: expireTimeInOneDay,
 				txGas,
 			};
@@ -116,6 +122,8 @@ const App = () => {
 						{ name: "to", type: "address" },
 						{ name: "tokenContract", type: "address" },
 						{ name: "amount", type: "uint256" },
+						{ name: "batchId", type: "uint256" },
+						{ name: "batchNonce", type: "uint256" },
 						{ name: "expiry", type: "uint256" },
 						{ name: "txGas", type: "uint256" },
 					],
@@ -138,6 +146,8 @@ const App = () => {
 					to: eipTxData.to,
 					tokenContract: eipTxData.tokenContract,
 					amount: eipTxData.amount,
+					batchId: eipTxData.batchId,
+					batchNonce: eipTxData.batchNonce,
 					expiry: eipTxData.expiry,
 					txGas: eipTxData.txGas,
 				},

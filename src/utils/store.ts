@@ -3,34 +3,32 @@ import * as fs from "fs";
 const storageFile = "offchain-storage.json";
 
 interface OffchainStorage {
-    [key: string]: string;
+	[key: string]: string;
 }
 
 class OffchainStorageService {
-    private offchainStorage: OffchainStorage = {};
+	public offchainStorage: OffchainStorage = {};
 
-    constructor() {
-        fs.exists(storageFile, (exists) => {
-            if (exists) {
-                this.offchainStorage = JSON.parse(
-                    fs.readFileSync(storageFile).toString()
-                );
-            }
-        });
-    }
+	constructor() {
+		fs.exists(storageFile, (exists) => {
+			if (exists) {
+				this.offchainStorage = JSON.parse(fs.readFileSync(storageFile).toString());
+			}
+		});
+	}
 
-    private writeStorage(): void {
-        fs.writeFileSync(storageFile, JSON.stringify(this.offchainStorage));
-    }
+	private writeStorage(): void {
+		fs.writeFileSync(storageFile, JSON.stringify(this.offchainStorage));
+	}
 
-    public async get(key: string): Promise<string | undefined> {
-        return this.offchainStorage[key];
-    }
+	public async get(key: string): Promise<string | undefined> {
+		return this.offchainStorage[key];
+	}
 
-    public async set(key: string, value: string): Promise<void> {
-        this.offchainStorage[key] = value;
-        this.writeStorage();
-    }
+	public async set(key: string, value: string): Promise<void> {
+		this.offchainStorage[key] = value;
+		this.writeStorage();
+	}
 }
 
 export default OffchainStorageService;

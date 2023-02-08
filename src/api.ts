@@ -7,14 +7,40 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 let relayerService: RelayerService;
-app.get("/batchdata", async (req: any, res: any) => {
-	const data = {
-		relayerAddress: relayerService.contract.address,
-	};
-	res.status(200).json(data);
+app.post("/batchdata", async (req: any, res: any) => {
+	const { from, txGas } = req.body;
+	console.log(req.body)
+	try {
+		const batchData = await relayerService.getExpectedBatchData(txGas, from);
+		const data = {
+			...batchData,
+			relayerAddress: relayerService.contract.address,
+		};
+		console.log(data)
+		res.status(200).json(data);
+	} catch (error: any) {
+		res.status(500).json({
+			message: "Error Getting batch Data: " + error.message,
+		});
+	}
 });
 app.post("/submitMessage", async (req: any, res: any) => {
-	const { from, to, data, name, version, chainId, verifyingContract, signature, tokenContract, amount, expiry, txGas } = req.body;
+	const {
+		from,
+		to,
+		data,
+		name,
+		version,
+		chainId,
+		verifyingContract,
+		signature,
+		tokenContract,
+		amount,
+		batchId,
+		batchNonce,
+		expiry,
+		txGas,
+	} = req.body;
 	const txData: MetaTx = {
 		from,
 		to,
@@ -26,8 +52,8 @@ app.post("/submitMessage", async (req: any, res: any) => {
 		signature,
 		tokenContract,
 		amount,
-		batchId: 0,
-		batchNonce: 0,
+		batchId,
+		batchNonce,
 		expiry,
 		txGas,
 	};
